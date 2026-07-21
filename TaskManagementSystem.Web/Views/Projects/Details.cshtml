@@ -1,0 +1,104 @@
+﻿@model TaskManagementSystem.Web.Models.ProjectDetailsViewModel
+@{
+    ViewData["Title"] = Model.Project.ProjectName;
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h3>@Model.Project.ProjectName <span class="badge bg-secondary">@Model.Project.StatusName</span></h3>
+        <p class="text-muted mb-1">@Model.Project.Description</p>
+        <small class="text-muted">
+            @Model.Project.StartDate?.ToString("dd/MM/yyyy") — @Model.Project.EndDate?.ToString("dd/MM/yyyy")
+            &nbsp;|&nbsp; Tạo bởi @Model.Project.CreatedByName
+        </small>
+    </div>
+    @if (Model.CanManage)
+    {
+        <a asp-action="Edit" asp-route-id="@Model.Project.ProjectId" class="btn btn-outline-primary btn-sm">Sửa dự án</a>
+    }
+</div>
+
+<div class="row">
+    <!-- Members -->
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                Thành viên (@Model.Members.Count)
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var m in Model.Members)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div>@m.FullName</div>
+                            <small class="text-muted">@m.UserName</small>
+                        </div>
+                        @if (Model.CanManage)
+                        {
+                            <form asp-action="RemoveMember" method="post"
+                                  onsubmit="return confirm('Xóa thành viên này khỏi dự án?');">
+                                <input type="hidden" name="projectId" value="@Model.Project.ProjectId" />
+                                <input type="hidden" name="userId" value="@m.UserId" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                            </form>
+                        }
+                    </li>
+                }
+            </ul>
+            @if (Model.CanManage && ViewBag.AvailableUsers != null)
+            {
+                <div class="card-footer">
+                    <form asp-action="AddMember" method="post" class="d-flex gap-2">
+                        <input type="hidden" name="projectId" value="@Model.Project.ProjectId" />
+                        <select name="userId" class="form-select form-select-sm" asp-items="ViewBag.AvailableUsers"></select>
+                        <button type="submit" class="btn btn-sm btn-primary">Thêm</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Tasks -->
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5>Công việc</h5>
+            <a asp-controller="Tasks" asp-action="Create" asp-route-projectId="@Model.Project.ProjectId" class="btn btn-sm btn-primary">+ Thêm công việc</a>
+        </div>
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Tiêu đề</th>
+                    <th>Ưu tiên</th>
+                    <th>Trạng thái</th>
+                    <th>Hạn</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.Tasks)
+                {
+                    <tr>
+                        <td>@t.Title</td>
+                        <td><span class="badge bg-warning text-dark">@t.PriorityName</span></td>
+                        <td><span class="badge bg-info text-dark">@t.StatusName</span></td>
+                        <td>@t.DueDate?.ToString("dd/MM/yyyy")</td>
+                        <td><a asp-controller="Tasks" asp-action="Details" asp-route-id="@t.TaskId" class="btn btn-sm btn-outline-secondary">Xem</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!Model.Tasks.Any())
+        {
+            <p class="text-muted">Chưa có công việc nào trong dự án.</p>
+        }
+    </div>
+</div>

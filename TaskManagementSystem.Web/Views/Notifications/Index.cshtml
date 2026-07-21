@@ -1,0 +1,35 @@
+﻿@model IEnumerable<TaskManagementSystem.Web.Models.NotificationViewModel>
+@{
+    ViewData["Title"] = "Thông báo";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Thông báo</h3>
+    <form asp-action="MarkAllAsRead" method="post">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">Đánh dấu đã đọc tất cả</button>
+    </form>
+</div>
+
+<div class="list-group">
+    @foreach (var n in Model)
+    {
+        <div class="list-group-item @(n.IsRead ? "" : "list-group-item-light border-start border-primary border-3")">
+            <div class="d-flex justify-content-between">
+                <h6 class="mb-1">@n.Title</h6>
+                <small class="text-muted">@n.CreatedDate.ToString("dd/MM/yyyy HH:mm")</small>
+            </div>
+            <p class="mb-1">@n.Content</p>
+            @if (!n.IsRead)
+            {
+                <form asp-action="MarkAsRead" asp-route-id="@n.NotificationId" method="post">
+                    <button type="submit" class="btn btn-link btn-sm p-0">Đánh dấu đã đọc</button>
+                </form>
+            }
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Không có thông báo nào.</p>
+}

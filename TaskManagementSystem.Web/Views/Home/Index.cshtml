@@ -1,0 +1,66 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+@if (!isAuthenticated)
+{
+    <div class="text-center py-5">
+        <h1 class="display-4">TaskManagementSystem</h1>
+        <p class="lead text-muted">Quản lý dự án và công việc nhóm tập trung, rõ ràng, theo dõi được tiến độ từng thành viên.</p>
+        <a asp-controller="Auth" asp-action="Login" class="btn btn-primary btn-lg mt-3">Đăng nhập để bắt đầu</a>
+    </div>
+}
+else
+{
+    var fullName = User.Identity?.Name;
+    var isAdmin = User.IsInRole("Admin");
+    var canManageUsers = isAdmin || User.IsInRole("Manager");
+    <div class="mb-4">
+        <h2>Chào mừng trở lại, @fullName</h2>
+        <p class="text-muted">Đây là bảng điều khiển nhanh của bạn.</p>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Dự án của tôi</h5>
+                    <p class="card-text text-muted">Xem danh sách dự án bạn đang tham gia.</p>
+                    <a asp-controller="Projects" asp-action="MyProjects" class="btn btn-outline-primary btn-sm">Xem dự án</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Công việc được giao</h5>
+                    <p class="card-text text-muted">Theo dõi các task đang chờ xử lý.</p>
+                    <a asp-controller="Tasks" asp-action="MyTasks" class="btn btn-outline-primary btn-sm">Xem công việc</a>
+                </div>
+            </div>
+        </div>
+        @if (canManageUsers)
+        {
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Quản lý tài khoản</h5>
+                        <p class="card-text text-muted">Cấp phát và quản lý tài khoản nhân viên.</p>
+                        <a asp-controller="Users" asp-action="Index" class="btn btn-outline-primary btn-sm">Quản lý</a>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (canManageUsers)
+        {
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Toàn bộ dự án</h5>
+                        <p class="card-text text-muted">Xem tất cả dự án trong hệ thống.</p>
+                        <a asp-controller="Projects" asp-action="Index" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

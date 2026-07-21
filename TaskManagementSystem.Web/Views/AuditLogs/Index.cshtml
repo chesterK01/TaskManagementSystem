@@ -1,0 +1,35 @@
+﻿@model IEnumerable<TaskManagementSystem.Web.Models.AuditLogViewModel>
+@{
+    ViewData["Title"] = "Nhật ký hệ thống";
+}
+
+<h3>Nhật ký hệ thống</h3>
+
+<table class="table table-striped table-sm">
+    <thead>
+        <tr>
+            <th>Thời gian</th>
+            <th>Người dùng</th>
+            <th>Bảng</th>
+            <th>Bản ghi</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var l in Model)
+        {
+            <tr>
+                <td>@l.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                <td>@(l.UserName ?? "—")</td>
+                <td>@l.TableName</td>
+                <td>@l.RecordId</td>
+                <td>@l.Action</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Chưa có nhật ký nào.</p>
+}

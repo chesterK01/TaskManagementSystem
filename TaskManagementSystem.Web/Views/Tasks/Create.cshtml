@@ -1,0 +1,36 @@
+﻿@model TaskManagementSystem.Web.Models.CreateProjectTaskViewModel
+@{
+    ViewData["Title"] = "Tạo công việc mới";
+}
+
+<h3>Tạo công việc mới</h3>
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<form asp-action="Create" asp-route-projectId="@ViewBag.ProjectId" method="post" class="col-md-6">
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Priority" class="form-label"></label>
+        <select asp-for="Priority" asp-items="ViewBag.PriorityOptions" class="form-select"></select>
+    </div>
+    <div class="mb-3">
+        <label asp-for="DueDate" class="form-label"></label>
+        <input asp-for="DueDate" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Tạo công việc</button>
+    <a asp-controller="Projects" asp-action="Details" asp-route-id="@ViewBag.ProjectId" class="btn btn-secondary">Hủy</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,37 @@
+﻿@model IEnumerable<TaskManagementSystem.Web.Models.ProjectTaskViewModel>
+@{
+    ViewData["Title"] = "Công việc của tôi";
+}
+
+<h3>Công việc được giao</h3>
+
+<table class="table table-hover align-middle">
+    <thead>
+        <tr>
+            <th>Tiêu đề</th>
+            <th>Dự án</th>
+            <th>Ưu tiên</th>
+            <th>Trạng thái</th>
+            <th>Hạn</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var t in Model)
+        {
+            <tr>
+                <td>@t.Title</td>
+                <td>@t.ProjectName</td>
+                <td><span class="badge bg-warning text-dark">@t.PriorityName</span></td>
+                <td><span class="badge bg-info text-dark">@t.StatusName</span></td>
+                <td>@t.DueDate?.ToString("dd/MM/yyyy")</td>
+                <td><a asp-action="Details" asp-route-id="@t.TaskId" class="btn btn-sm btn-outline-secondary">Xem</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Bạn chưa được giao công việc nào.</p>
+}

@@ -1,0 +1,42 @@
+﻿@model TaskManagementSystem.Web.Models.UpdateProjectViewModel
+@{
+    ViewData["Title"] = "Cập nhật dự án";
+}
+
+<h3>Cập nhật dự án</h3>
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<form asp-action="Edit" asp-route-id="@ViewBag.ProjectId" method="post" class="col-md-6">
+    <div class="mb-3">
+        <label asp-for="ProjectName" class="form-label"></label>
+        <input asp-for="ProjectName" class="form-control" />
+        <span asp-validation-for="ProjectName" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="StartDate" class="form-label"></label>
+            <input asp-for="StartDate" class="form-control" />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="EndDate" class="form-label"></label>
+            <input asp-for="EndDate" class="form-control" />
+        </div>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Status" class="form-label"></label>
+        <select asp-for="Status" asp-items="ViewBag.StatusOptions" class="form-select"></select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+    <a asp-action="Details" asp-route-id="@ViewBag.ProjectId" class="btn btn-secondary">Hủy</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

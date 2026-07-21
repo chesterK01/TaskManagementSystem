@@ -1,0 +1,72 @@
+﻿@model IEnumerable<TaskManagementSystem.Web.Models.UserViewModel>
+@{
+    ViewData["Title"] = "Danh sách tài khoản";
+    var isAdmin = User.IsInRole("Admin");
+    var canManage = isAdmin || User.IsInRole("Manager");
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Danh sách tài khoản</h3>
+    @if (canManage)
+    {
+        <a asp-action="Create" class="btn btn-primary">+ Cấp tài khoản mới</a>
+    }
+</div>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+<table class="table table-striped table-hover align-middle">
+    <thead>
+        <tr>
+            <th>Tên đăng nhập</th>
+            <th>Họ tên</th>
+            <th>Email</th>
+            <th>Vai trò</th>
+            <th>Trạng thái</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.UserName</td>
+                <td>@user.FullName</td>
+                <td>@user.Email</td>
+                <td><span class="badge bg-secondary">@user.RoleName</span></td>
+                <td>
+                    @if (user.IsActive)
+                    {
+                        <span class="badge bg-success">Đang hoạt động</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Đã khóa</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@user.UserAccountId" class="btn btn-sm btn-outline-secondary">Xem</a>
+                    @if (canManage)
+                    {
+                        <a asp-action="Edit" asp-route-id="@user.UserAccountId" class="btn btn-sm btn-outline-primary">Sửa</a>
+                    }
+                    @if (isAdmin)
+                    {
+                        <form asp-action="Delete" asp-route-id="@user.UserAccountId" method="post" class="d-inline"
+                              onsubmit="return confirm('Khóa tài khoản này?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Khóa</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@if (!Model.Any())
+{
+    <p class="text-muted">Chưa có tài khoản nào.</p>
+}
