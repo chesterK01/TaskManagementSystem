@@ -1,5 +1,4 @@
-﻿@await Component.InvokeAsync("NotificationBadge")
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -10,6 +9,8 @@
     <link rel="stylesheet" href="~/TaskManagementSystem.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
+    <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;"></div>
+
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
@@ -71,6 +72,7 @@
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -82,9 +84,55 @@
             &copy; 2026 - TaskManagementSystem.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+        <script>
+            const notificationConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/hubs/notifications")
+                .withAutomaticReconnect()
+                .build();
+
+            notificationConnection.on("ReceiveNotification", function (notification) {
+                const badge = document.getElementById("notificationBadge");
+                if (badge) {
+                    const current = parseInt(badge.textContent || "0", 10) || 0;
+                    badge.textContent = current + 1;
+                    badge.style.display = "inline-block";
+                }
+                showNotificationToast(notification.title, notification.content);
+            });
+
+            notificationConnection.start().catch(function (err) {
+                console.error("SignalR connection error:", err);
+            });
+
+            function showNotificationToast(title, content) {
+                const container = document.getElementById("toastContainer");
+                if (!container) return;
+
+                const toastEl = document.createElement("div");
+                toastEl.className = "toast align-items-center text-bg-primary border-0";
+                toastEl.setAttribute("role", "alert");
+                toastEl.innerHTML =
+                    '<div class="d-flex">' +
+                        '<div class="toast-body"><strong>' + title + '</strong><br>' + content + '</div>' +
+                        '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
+                    '</div>';
+
+                container.appendChild(toastEl);
+                const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+                toast.show();
+                toastEl.addEventListener("hidden.bs.toast", function () { toastEl.remove(); });
+            }
+        </script>
+    }
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

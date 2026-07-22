@@ -21,7 +21,7 @@ namespace TaskManagementSystem.Service.IServices
         Task UpdateStatusAsync(int id, ProjectTaskStatus newStatus, int changedBy);
         Task DeleteAsync(int id);
         Task<IEnumerable<TaskHistoryDto>> GetHistoryAsync(int taskId);
-        Task<IEnumerable<UserDto>> GetAssignableUsersAsync(int taskId);
+        Task<IEnumerable<UserDto>> GetAssignableUsersAsync(int taskId, int currentUserId);
         Task AssignUserAsync(int taskId, int userId);
         Task UnassignUserAsync(int taskId, int userId);
     }

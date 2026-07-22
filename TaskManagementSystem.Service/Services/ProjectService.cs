@@ -79,7 +79,40 @@ namespace TaskManagementSystem.Service.Services
 
             return await GetByIdAsync(project.ProjectId);
         }
+        public async Task<ProjectDto> CreateAsync(CreateProjectDto dto, int createdBy, bool creatorIsAdmin)
+        {
+            if (dto.StartDate.HasValue && dto.EndDate.HasValue && dto.EndDate < dto.StartDate)
+                throw new AppException("Ngày kết thúc không được trước ngày bắt đầu.");
 
+            var project = new Repository.Models.Project
+            {
+                ProjectName = dto.ProjectName,
+                Description = dto.Description,
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+                Status = (byte)ProjectStatus.NotStarted,
+                CreatedBy = createdBy,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Projects.CreateAsync(project);
+            await _unitOfWork.SaveChangesAsync();
+
+            // adm tạo project để phân công, không phải là ng làm công việc.
+            // mng tạo project thì tự động tham gia, vì họ là người trực tiếp làm việc.
+            if (!creatorIsAdmin)
+            {
+                await _unitOfWork.ProjectMembers.AddAsync(new ProjectMember
+                {
+                    ProjectId = project.ProjectId,
+                    UserId = createdBy,
+                    JoinedDate = DateTime.UtcNow
+                });
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return await GetByIdAsync(project.ProjectId);
+        }
         public async Task<ProjectDto> UpdateAsync(int id, UpdateProjectDto dto)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(id)

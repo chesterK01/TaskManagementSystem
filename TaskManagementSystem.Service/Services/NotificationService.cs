@@ -14,10 +14,12 @@ namespace TaskManagementSystem.Service.Services
     public class NotificationService : INotificationService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IRealtimeNotifier _realtimeNotifier;
 
-        public NotificationService(IUnitOfWork unitOfWork)
+        public NotificationService(IUnitOfWork unitOfWork, IRealtimeNotifier realtimeNotifier   )
         {
             _unitOfWork = unitOfWork;
+            _realtimeNotifier = realtimeNotifier;
         }
 
         public async Task<IEnumerable<NotificationDto>> GetByUserIdAsync(int userId)
@@ -50,6 +52,7 @@ namespace TaskManagementSystem.Service.Services
                 CreatedDate = DateTime.UtcNow
             });
             await _unitOfWork.SaveChangesAsync();
+            await _realtimeNotifier.NotifyUserAsync(userId, title, content);
         }
 
         public async Task MarkAsReadAsync(int notificationId, int requesterId)

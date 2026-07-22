@@ -63,7 +63,7 @@ namespace TaskManagementSystem.Web.Controllers
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     return Redirect(returnUrl);
 
-                return RedirectToAction("Index", "Users");
+                return RedirectToAction("Index", "Home");
             }
             catch (AppException ex)
             {

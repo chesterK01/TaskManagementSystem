@@ -6,6 +6,8 @@ using TaskManagementSystem.Repository.Models;
 using TaskManagementSystem.Repository.Repositories;
 using TaskManagementSystem.Service.IServices;
 using TaskManagementSystem.Service.Services;
+using TaskManagementSystem.Web.Hubs;
+using TaskManagementSystem.Web.Services;
 
 namespace TaskManagementSystem.Web
 {
@@ -18,6 +20,7 @@ namespace TaskManagementSystem.Web
 
             builder.Services.AddDbContext<TaskManagementSystemContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddSignalR();
             // Add services
             builder.Services.AddControllersWithViews();
 
@@ -45,6 +48,7 @@ namespace TaskManagementSystem.Web
             builder.Services.AddScoped<IAttachmentService, AttachmentService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+            builder.Services.AddScoped<IRealtimeNotifier, RealtimeNotifier>();
 
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
@@ -77,7 +81,7 @@ namespace TaskManagementSystem.Web
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
-
+            app.MapHub<NotificationHub>("/hubs/notifications");
             app.Run();
         }
     }

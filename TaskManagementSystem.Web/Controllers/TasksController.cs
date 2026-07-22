@@ -42,21 +42,26 @@ namespace TaskManagementSystem.Web.Controllers
                 var task = await _taskService.GetByIdAsync(id);
                 var vm = ToViewModel(task);
 
-                var isMemberOfProject = await _projectService.IsMemberAsync(task.ProjectId, User.GetUserId());
-                var canManage = User.IsInRole("Admin") || User.IsInRole("Manager") || isMemberOfProject;
+                var isManager = User.IsInRole("Admin") || User.IsInRole("Manager");
+                var isAssignee = task.AssignedUsers.Any(a => a.UserId == User.GetUserId());
+
+                var canManage = isManager;                    // chỉ Admin/Manager: sửa, xóa, giao việc
+                var canUpdateStatus = isManager || isAssignee; // + người được giao: chỉ đổi trạng thái
 
                 if (canManage)
                 {
-                    var assignable = await _taskService.GetAssignableUsersAsync(id);
+                    var assignable = await _taskService.GetAssignableUsersAsync(id, User.GetUserId());
                     ViewBag.AssignableUsers = new SelectList(assignable, "UserAccountId", "FullName");
                 }
                 ViewBag.CanManage = canManage;
+                ViewBag.CanUpdateStatus = canUpdateStatus;
                 ViewBag.CurrentUserId = User.GetUserId();
                 LoadStatusOptions();
 
                 ViewBag.Attachments = await _attachmentService.GetByTaskIdAsync(id);
                 ViewBag.Comments = await _commentService.GetByTaskIdAsync(id);
                 ViewBag.History = await _taskService.GetHistoryAsync(id);
+
                 return View(vm);
             }
             catch (AppException ex)
@@ -65,7 +70,8 @@ namespace TaskManagementSystem.Web.Controllers
                 return RedirectToAction(nameof(MyTasks));
             }
         }
-        
+
+        [Authorize(Roles = "Admin,Manager")]
         public IActionResult Create(int projectId)
         {
             ViewBag.ProjectId = projectId;
@@ -75,6 +81,7 @@ namespace TaskManagementSystem.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Create(int projectId, CreateProjectTaskViewModel model)
         {
             if (!ModelState.IsValid)
@@ -107,6 +114,7 @@ namespace TaskManagementSystem.Web.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -134,6 +142,7 @@ namespace TaskManagementSystem.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Edit(int id, UpdateProjectTaskViewModel model)
         {
             if (!ModelState.IsValid)
@@ -184,6 +193,7 @@ namespace TaskManagementSystem.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Delete(int id, int projectId)
         {
             try
@@ -200,6 +210,7 @@ namespace TaskManagementSystem.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> AssignUser(int taskId, int userId)
         {
             try
@@ -216,6 +227,7 @@ namespace TaskManagementSystem.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> UnassignUser(int taskId, int userId)
         {
             try

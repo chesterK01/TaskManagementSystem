@@ -96,7 +96,14 @@ namespace TaskManagementSystem.Service.Services
         {
             var task = await _unitOfWork.ProjectTasks.GetByIdAsync(id)
                 ?? throw new AppException("Công việc không tồn tại.");
+            var isAssignee = (await _unitOfWork.TaskAssignments.GetByTaskIdAsync(id))
+            .Any(a => a.UserId == changedBy);
 
+            var user = await _unitOfWork.Users.GetByIdAsync(changedBy);
+            var isManager = user?.Role?.RoleName is "Admin" or "Manager";
+
+            if (!isManager && !isAssignee)
+                throw new AppException("Bạn không được giao công việc này nên không thể đổi trạng thái.");
             var oldStatus = task.Status;
             task.Status = (byte)newStatus;
             await _unitOfWork.ProjectTasks.UpdateAsync(task);
@@ -123,7 +130,7 @@ namespace TaskManagementSystem.Service.Services
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<UserDto>> GetAssignableUsersAsync(int taskId)
+        public async Task<IEnumerable<UserDto>> GetAssignableUsersAsync(int taskId, int currentUserId)
         {
             var task = await _unitOfWork.ProjectTasks.GetByIdAsync(taskId)
                 ?? throw new AppException("Công việc không tồn tại.");
@@ -133,7 +140,7 @@ namespace TaskManagementSystem.Service.Services
             var assignedIds = assignments.Select(a => a.UserId).ToHashSet();
 
             return members
-                .Where(m => !assignedIds.Contains(m.UserId))
+                .Where(m => !assignedIds.Contains(m.UserId) && m.UserId != currentUserId)
                 .Select(m => new UserDto
                 {
                     UserAccountId = m.UserId,

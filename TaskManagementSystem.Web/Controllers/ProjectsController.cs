@@ -112,7 +112,7 @@ namespace TaskManagementSystem.Web.Controllers
                     EndDate = model.EndDate
                 };
 
-                var created = await _projectService.CreateAsync(dto, User.GetUserId());
+                var created = await _projectService.CreateAsync(dto, User.GetUserId(), User.IsInRole("Admin"));
                 TempData["Success"] = "Đã tạo dự án mới.";
                 return RedirectToAction(nameof(Details), new { id = created.ProjectId });
             }
