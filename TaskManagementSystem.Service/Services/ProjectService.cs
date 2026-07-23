@@ -15,10 +15,12 @@ namespace TaskManagementSystem.Service.Services
     public class ProjectService : IProjectService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IAuditLogService _auditLogService;
 
-        public ProjectService(IUnitOfWork unitOfWork)
+        public ProjectService(IUnitOfWork unitOfWork, IAuditLogService auditLogService)
         {
             _unitOfWork = unitOfWork;
+            _auditLogService = auditLogService;
         }
 
         public async Task<IEnumerable<ProjectDto>> GetAllAsync()
@@ -97,6 +99,7 @@ namespace TaskManagementSystem.Service.Services
 
             await _unitOfWork.Projects.CreateAsync(project);
             await _unitOfWork.SaveChangesAsync();
+            await _auditLogService.LogAsync(createdBy, "Project", project.ProjectId, "Create");
 
             // adm tạo project để phân công, không phải là ng làm công việc.
             // mng tạo project thì tự động tham gia, vì họ là người trực tiếp làm việc.
@@ -113,7 +116,7 @@ namespace TaskManagementSystem.Service.Services
 
             return await GetByIdAsync(project.ProjectId);
         }
-        public async Task<ProjectDto> UpdateAsync(int id, UpdateProjectDto dto)
+        public async Task<ProjectDto> UpdateAsync(int id, UpdateProjectDto dto, int performedBy)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(id)
                 ?? throw new AppException("Dự án không tồn tại.");
@@ -130,10 +133,12 @@ namespace TaskManagementSystem.Service.Services
             await _unitOfWork.Projects.UpdateAsync(project);
             await _unitOfWork.SaveChangesAsync();
 
+            await _auditLogService.LogAsync(performedBy, "Project", id, "Update");
+
             return await GetByIdAsync(id);
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id, int performedBy)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(id)
                 ?? throw new AppException("Dự án không tồn tại.");
@@ -144,6 +149,8 @@ namespace TaskManagementSystem.Service.Services
 
             await _unitOfWork.Projects.DeleteAsync(project);
             await _unitOfWork.SaveChangesAsync();
+
+            await _auditLogService.LogAsync(performedBy, "Project", id, "Delete");
         }
 
         public async Task<IEnumerable<ProjectMemberDto>> GetMembersAsync(int projectId)

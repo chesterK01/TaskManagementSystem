@@ -162,7 +162,7 @@ namespace TaskManagementSystem.Web.Controllers
                     DueDate = model.DueDate
                 };
 
-                var updated = await _taskService.UpdateAsync(id, dto);
+                var updated = await _taskService.UpdateAsync(id, dto, User.GetUserId());
                 TempData["Success"] = "Đã cập nhật công việc.";
                 return RedirectToAction(nameof(Details), new { id });
             }
@@ -198,7 +198,7 @@ namespace TaskManagementSystem.Web.Controllers
         {
             try
             {
-                await _taskService.DeleteAsync(id);
+                await _taskService.DeleteAsync(id, User.GetUserId());
                 TempData["Success"] = "Đã xóa công việc.";
             }
             catch (AppException ex)
@@ -215,7 +215,7 @@ namespace TaskManagementSystem.Web.Controllers
         {
             try
             {
-                await _taskService.AssignUserAsync(taskId, userId);
+                await _taskService.AssignUserAsync(taskId, userId, User.GetUserId());
                 TempData["Success"] = "Đã giao việc.";
             }
             catch (AppException ex)
@@ -232,7 +232,7 @@ namespace TaskManagementSystem.Web.Controllers
         {
             try
             {
-                await _taskService.UnassignUserAsync(taskId, userId);
+                await _taskService.UnassignUserAsync(taskId, userId, User.GetUserId());
                 TempData["Success"] = "Đã hủy giao việc.";
             }
             catch (AppException ex)

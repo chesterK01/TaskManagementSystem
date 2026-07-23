@@ -17,12 +17,12 @@ namespace TaskManagementSystem.Service.IServices
         Task<IEnumerable<ProjectTaskDto>> GetMyTasksAsync(int userId);
 
         Task<ProjectTaskDto> CreateAsync(int projectId, CreateProjectTaskDto dto, int createdBy);
-        Task<ProjectTaskDto> UpdateAsync(int id, UpdateProjectTaskDto dto);
+        Task<ProjectTaskDto> UpdateAsync(int id, UpdateProjectTaskDto dto, int performedBy);
         Task UpdateStatusAsync(int id, ProjectTaskStatus newStatus, int changedBy);
-        Task DeleteAsync(int id);
+        Task DeleteAsync(int id, int performedBy);
         Task<IEnumerable<TaskHistoryDto>> GetHistoryAsync(int taskId);
         Task<IEnumerable<UserDto>> GetAssignableUsersAsync(int taskId, int currentUserId);
-        Task AssignUserAsync(int taskId, int userId);
-        Task UnassignUserAsync(int taskId, int userId);
+        Task AssignUserAsync(int taskId, int userId, int performedBy);
+        Task UnassignUserAsync(int taskId, int userId, int performedBy);
     }
 }

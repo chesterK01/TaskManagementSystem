@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TaskManagementSystem.Repository.IRepositories;
+﻿using TaskManagementSystem.Repository.IRepositories;
 using TaskManagementSystem.Repository.Models;
 using TaskManagementSystem.Service.DTOs.Common;
 using TaskManagementSystem.Service.DTOs.Task;
@@ -17,10 +12,16 @@ namespace TaskManagementSystem.Service.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationService _notificationService;
-        public ProjectTaskService(IUnitOfWork unitOfWork, INotificationService notificationService)
+        private readonly IAuditLogService _auditLogService;
+
+        public ProjectTaskService(
+            IUnitOfWork unitOfWork,
+            INotificationService notificationService,
+            IAuditLogService auditLogService)
         {
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
+            _auditLogService = auditLogService;
         }
 
         public async Task<IEnumerable<ProjectTaskDto>> GetByProjectIdAsync(int projectId)
@@ -58,7 +59,7 @@ namespace TaskManagementSystem.Service.Services
             _ = await _unitOfWork.Projects.GetByIdAsync(projectId)
                 ?? throw new AppException("Dự án không tồn tại.");
 
-            var task = new Repository.Models.ProjectTask
+            var task = new ProjectTask
             {
                 ProjectId = projectId,
                 Title = dto.Title,
@@ -73,10 +74,12 @@ namespace TaskManagementSystem.Service.Services
             await _unitOfWork.ProjectTasks.CreateAsync(task);
             await _unitOfWork.SaveChangesAsync();
 
+            await _auditLogService.LogAsync(createdBy, "ProjectTask", task.TaskId, "Create");
+
             return await GetByIdAsync(task.TaskId);
         }
 
-        public async Task<ProjectTaskDto> UpdateAsync(int id, UpdateProjectTaskDto dto)
+        public async Task<ProjectTaskDto> UpdateAsync(int id, UpdateProjectTaskDto dto, int performedBy)
         {
             var task = await _unitOfWork.ProjectTasks.GetByIdAsync(id)
                 ?? throw new AppException("Công việc không tồn tại.");
@@ -89,6 +92,8 @@ namespace TaskManagementSystem.Service.Services
             await _unitOfWork.ProjectTasks.UpdateAsync(task);
             await _unitOfWork.SaveChangesAsync();
 
+            await _auditLogService.LogAsync(performedBy, "ProjectTask", id, "Update");
+
             return await GetByIdAsync(id);
         }
 
@@ -97,7 +102,7 @@ namespace TaskManagementSystem.Service.Services
             var task = await _unitOfWork.ProjectTasks.GetByIdAsync(id)
                 ?? throw new AppException("Công việc không tồn tại.");
             var isAssignee = (await _unitOfWork.TaskAssignments.GetByTaskIdAsync(id))
-            .Any(a => a.UserId == changedBy);
+                .Any(a => a.UserId == changedBy);
 
             var user = await _unitOfWork.Users.GetByIdAsync(changedBy);
             var isManager = user?.Role?.RoleName is "Admin" or "Manager";
@@ -108,7 +113,6 @@ namespace TaskManagementSystem.Service.Services
             task.Status = (byte)newStatus;
             await _unitOfWork.ProjectTasks.UpdateAsync(task);
 
-            // Ghi lại lịch sử đổi, timeline tiến độ task
             await _unitOfWork.TaskHistories.AddAsync(new TaskHistory
             {
                 TaskId = id,
@@ -119,15 +123,18 @@ namespace TaskManagementSystem.Service.Services
             });
 
             await _unitOfWork.SaveChangesAsync();
+            await _auditLogService.LogAsync(changedBy, "ProjectTask", id,
+                $"ChangeStatus:{StatusLabels.TaskStatusName((ProjectTaskStatus)(oldStatus ?? 0))}->{newStatus}");
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id, int performedBy)
         {
             var task = await _unitOfWork.ProjectTasks.GetByIdAsync(id)
                 ?? throw new AppException("Công việc không tồn tại.");
 
             await _unitOfWork.ProjectTasks.DeleteAsync(task);
             await _unitOfWork.SaveChangesAsync();
+            await _auditLogService.LogAsync(performedBy, "ProjectTask", id, "Delete");
         }
 
         public async Task<IEnumerable<UserDto>> GetAssignableUsersAsync(int taskId, int currentUserId)
@@ -150,7 +157,7 @@ namespace TaskManagementSystem.Service.Services
                 });
         }
 
-        public async Task AssignUserAsync(int taskId, int userId)
+        public async Task AssignUserAsync(int taskId, int userId, int performedBy)
         {
             var task = await _unitOfWork.ProjectTasks.GetByIdAsync(taskId)
                 ?? throw new AppException("Công việc không tồn tại.");
@@ -173,11 +180,12 @@ namespace TaskManagementSystem.Service.Services
             });
             await _unitOfWork.SaveChangesAsync();
 
+            await _auditLogService.LogAsync(performedBy, "TaskAssignment", taskId, $"Assign:UserId={userId}");
             await _notificationService.CreateAsync(userId, "Bạn được giao công việc mới",
                 $"Bạn vừa được giao công việc \"{task.Title}\".");
         }
 
-        public async Task UnassignUserAsync(int taskId, int userId)
+        public async Task UnassignUserAsync(int taskId, int userId, int performedBy)
         {
             var assignments = await _unitOfWork.TaskAssignments.GetByTaskIdAsync(taskId);
             var assignment = assignments.FirstOrDefault(a => a.UserId == userId)
@@ -185,6 +193,7 @@ namespace TaskManagementSystem.Service.Services
 
             await _unitOfWork.TaskAssignments.RemoveAsync(assignment);
             await _unitOfWork.SaveChangesAsync();
+            await _auditLogService.LogAsync(performedBy, "TaskAssignment", taskId, $"Unassign:UserId={userId}");
         }
 
         private async Task<ProjectTaskDto> MapToDtoAsync(ProjectTask task)

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using TaskManagementSystem.Service.DTOs.Common;
 using TaskManagementSystem.Service.DTOs.User;
 using TaskManagementSystem.Service.IServices;
+using TaskManagementSystem.Web.Extensions;
 using TaskManagementSystem.Web.Models;
 
 namespace TaskManagementSystem.Web.Controllers
@@ -70,7 +71,7 @@ namespace TaskManagementSystem.Web.Controllers
                     RoleId = model.RoleId
                 };
 
-                await _userService.CreateAsync(dto);
+                await _userService.CreateAsync(dto, User.GetUserId());
                 TempData["Success"] = "Đã cấp tài khoản mới.";
                 return RedirectToAction(nameof(Index));
             }
@@ -132,7 +133,7 @@ namespace TaskManagementSystem.Web.Controllers
                     IsActive = model.IsActive
                 };
 
-                await _userService.UpdateAsync(id, dto);
+                await _userService.UpdateAsync(id, dto, User.GetUserId());
                 TempData["Success"] = "Đã cập nhật tài khoản.";
                 return RedirectToAction(nameof(Index));
             }
@@ -152,7 +153,7 @@ namespace TaskManagementSystem.Web.Controllers
         {
             try
             {
-                await _userService.DeleteAsync(id);
+                await _userService.DeleteAsync(id, User.GetUserId());
                 TempData["Success"] = "Đã khóa tài khoản.";
             }
             catch (AppException ex)

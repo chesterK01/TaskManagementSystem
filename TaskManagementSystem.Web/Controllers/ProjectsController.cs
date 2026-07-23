@@ -172,7 +172,7 @@ namespace TaskManagementSystem.Web.Controllers
                     Status = model.Status
                 };
 
-                await _projectService.UpdateAsync(id, dto);
+                await _projectService.UpdateAsync(id, dto, User.GetUserId());
                 TempData["Success"] = "Đã cập nhật dự án.";
                 return RedirectToAction(nameof(Details), new { id });
             }
@@ -192,7 +192,7 @@ namespace TaskManagementSystem.Web.Controllers
         {
             try
             {
-                await _projectService.DeleteAsync(id);
+                await _projectService.DeleteAsync(id, User.GetUserId());
                 TempData["Success"] = "Đã xóa dự án.";
             }
             catch (AppException ex)

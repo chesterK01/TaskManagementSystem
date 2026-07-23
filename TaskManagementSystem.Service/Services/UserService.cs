@@ -10,10 +10,12 @@ namespace TaskManagementSystem.Service.Services
     public class UserService : IUserService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IAuditLogService _auditLogService;
 
-        public UserService(IUnitOfWork unitOfWork)
+        public UserService(IUnitOfWork unitOfWork, IAuditLogService auditLogService)
         {
             _unitOfWork = unitOfWork;
+            _auditLogService = auditLogService;
         }
 
         public async Task<IEnumerable<UserDto>> GetAllAsync()
@@ -29,7 +31,7 @@ namespace TaskManagementSystem.Service.Services
             return MapToDto(user);
         }
 
-        public async Task<UserDto> CreateAsync(CreateUserDto dto)
+        public async Task<UserDto> CreateAsync(CreateUserDto dto, int performedBy)
         {
             if (await _unitOfWork.Users.UserNameExistsAsync(dto.UserName))
                 throw new AppException("Tên đăng nhập đã tồn tại.");
@@ -43,7 +45,6 @@ namespace TaskManagementSystem.Service.Services
             var user = new SystemUserAccount
             {
                 UserName = dto.UserName,
-                // Mật khẩu do cty cấp, có thể bắt đổi ở lần đăng nhập đầu
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 FullName = dto.FullName,
                 Email = dto.Email,
@@ -56,13 +57,15 @@ namespace TaskManagementSystem.Service.Services
             await _unitOfWork.Users.CreateAsync(user);
             await _unitOfWork.SaveChangesAsync();
 
+            await _auditLogService.LogAsync(performedBy, "UserAccount", user.UserAccountId, "Create");
+
             var created = await _unitOfWork.Users.GetByIdAsync(user.UserAccountId)
                 ?? throw new AppException("Tạo tài khoản thất bại.");
 
             return MapToDto(created);
         }
 
-        public async Task<UserDto> UpdateAsync(int id, UpdateUserDto dto)
+        public async Task<UserDto> UpdateAsync(int id, UpdateUserDto dto, int performedBy)
         {
             var user = await _unitOfWork.Users.GetByIdAsync(id)
                 ?? throw new AppException("Người dùng không tồn tại.");
@@ -80,18 +83,21 @@ namespace TaskManagementSystem.Service.Services
             await _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
 
+            await _auditLogService.LogAsync(performedBy, "UserAccount", id, "Update");
+
             return MapToDto(user);
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id, int performedBy)
         {
             var user = await _unitOfWork.Users.GetByIdAsync(id)
                 ?? throw new AppException("Người dùng không tồn tại.");
 
-
             user.IsActive = false;
             await _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
+
+            await _auditLogService.LogAsync(performedBy, "UserAccount", id, "Deactivate");
         }
         public async Task<IEnumerable<RoleDto>> GetRolesAsync()
         {

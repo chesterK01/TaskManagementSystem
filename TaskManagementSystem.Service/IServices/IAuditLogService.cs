@@ -10,5 +10,6 @@ namespace TaskManagementSystem.Service.IServices
     public interface IAuditLogService
     {
         Task<IEnumerable<AuditLogDto>> GetAllAsync();
+        Task LogAsync(int? userId, string tableName, int? recordId, string action);
     }
 }

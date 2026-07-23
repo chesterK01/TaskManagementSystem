@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskManagementSystem.Repository.IRepositories;
+using TaskManagementSystem.Repository.Models;
 using TaskManagementSystem.Service.DTOs.AuditLog;
 using TaskManagementSystem.Service.IServices;
 
@@ -30,6 +31,18 @@ namespace TaskManagementSystem.Service.Services
                 Action = l.Action ?? string.Empty,
                 CreatedDate = l.CreatedDate ?? DateTime.MinValue
             });
+        }
+        public async Task LogAsync(int? userId, string tableName, int? recordId, string action)
+        {
+            await _unitOfWork.AuditLogs.AddAsync(new AuditLog
+            {
+                UserId = userId,
+                TableName = tableName,
+                RecordId = recordId,
+                Action = action,
+                CreatedDate = DateTime.UtcNow
+            });
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

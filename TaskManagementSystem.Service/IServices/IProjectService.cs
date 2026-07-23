@@ -14,8 +14,8 @@ namespace TaskManagementSystem.Service.IServices
         Task<IEnumerable<ProjectDto>> GetMyProjectsAsync(int userId);
         Task<ProjectDto> GetByIdAsync(int id);
         Task<ProjectDto> CreateAsync(CreateProjectDto dto, int createdBy);
-        Task<ProjectDto> UpdateAsync(int id, UpdateProjectDto dto);
-        Task DeleteAsync(int id);
+        Task<ProjectDto> UpdateAsync(int id, UpdateProjectDto dto, int performedBy);
+        Task DeleteAsync(int id, int performedBy);
         Task<ProjectDto> CreateAsync(CreateProjectDto dto, int createdBy, bool creatorIsAdmin);
         Task<IEnumerable<ProjectMemberDto>> GetMembersAsync(int projectId);
         Task<IEnumerable<UserDto>> GetAvailableUsersAsync(int projectId);
